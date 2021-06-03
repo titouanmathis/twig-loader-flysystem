@@ -5,6 +5,7 @@ namespace CedricZiel\TwigLoaderFlysystem;
 use League\Flysystem\Filesystem;
 use Twig\Loader\LoaderInterface;
 use Twig\Error\LoaderError;
+use Twig\Source;
 
 /**
  * Provides a template loader for twig that allows to use flysystem
@@ -41,7 +42,7 @@ class FlysystemLoader implements LoaderInterface
      *
      * @param string $name The name of the template to load
      *
-     * @return string The template source code
+     * @return Source The template source code
      *
      * @throws LoaderError When $name is not found
      */
@@ -49,7 +50,13 @@ class FlysystemLoader implements LoaderInterface
     {
         $this->getFileOrFail($name);
 
-        return $this->filesystem->read($this->resolveTemplateName($name));
+        $code = $this->filesystem->read($this->resolveTemplateName($name));
+
+        if (!$code) {
+            throw new LoaderError('Template could not be found on the given filesystem');
+        }
+
+        return new Source($code, $name);
     }
 
     /**
