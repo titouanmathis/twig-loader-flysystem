@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace CedricZiel\TwigLoaderFlysystem\Test;
 
 use CedricZiel\TwigLoaderFlysystem\FlysystemLoader;
@@ -7,11 +9,12 @@ use League\Flysystem\AdapterInterface;
 use League\Flysystem\File;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Handler;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @package CedricZiel\TwigLoaderFlysystem\Test
  */
-class FlysystemLoaderTest extends \PHPUnit_Framework_TestCase
+class FlysystemLoaderTest extends TestCase
 {
     /**
      * @test
@@ -51,15 +54,18 @@ class FlysystemLoaderTest extends \PHPUnit_Framework_TestCase
 
         $loader = new FlysystemLoader($filesystem);
 
-        $loader->getSource('test/Object.twig');
+        $loader->getSourceContext('test/Object.twig');
     }
 
     /**
-     * @expectedException \Twig_Error_Loader
+     * @expectedException \Twig\Error\LoaderError
      * @test
      */
-    public function throwsLoaderErrorWhenTemplateNotFount()
+    public function throwsLoaderErrorWhenTemplateNotFound()
     {
+        $this->expectException('Twig\Error\LoaderError');
+        $this->expectExceptionMessage('Template could not be found on the given filesystem');
+
         /** @var Filesystem|\PHPUnit_Framework_MockObject_MockObject $filesystem */
         $filesystem = $this->getMockBuilder(Filesystem::class)
             ->disableOriginalConstructor()
@@ -72,7 +78,20 @@ class FlysystemLoaderTest extends \PHPUnit_Framework_TestCase
 
         $loader = new FlysystemLoader($filesystem);
 
-        $loader->getSource('test/Object.twig');
+        $loader->getSourceContext('test/Object.twig');
+    }
+
+    public function testErrorCanBeExpected(): void
+    {
+        $this->expectError();
+
+        // Optionally test that the message is equal to a string
+        $this->expectErrorMessage('foo');
+
+        // Or optionally test that the message matches a regular expression
+        $this->expectErrorMessageMatches('/foo/');
+
+        \trigger_error('foo', \E_USER_ERROR);
     }
 
     /**
@@ -201,6 +220,6 @@ class FlysystemLoaderTest extends \PHPUnit_Framework_TestCase
 
         $loader = new FlysystemLoader($filesystem, 'templates');
 
-        $loader->getSource('test/Object.twig');
+        $loader->getSourceContext('test/Object.twig');
     }
 }
